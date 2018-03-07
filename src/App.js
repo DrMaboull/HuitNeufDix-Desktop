@@ -1,42 +1,91 @@
 import React, { Component } from 'react';
 import fire from './fire';
+import "./App.css";
+
+import { Layout, Button } from 'antd'
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { messages: [] }; // <- set up react state
-  }
-  componentWillMount(){
-    /* Create reference to messages in Firebase Database */
-    let messagesRef = fire.database().ref('messages').orderByKey().limitToLast(100);
-    messagesRef.on('child_added', snapshot => {
-      /* Update React state when message is added at Firebase Database */
-      let message = { text: snapshot.val(), id: snapshot.key };
-      this.setState({ messages: [message].concat(this.state.messages) });
-    })
-  }
-  addMessage(e){
-    e.preventDefault(); // <- prevent form submit from reloading the page
-    /* Send the message to Firebase */
-    fire.database().ref('messages').push( this.inputEl.value );
-    this.inputEl.value = ''; // <- clear the input
-  }
-  render() {
-    return (
-      <form onSubmit={this.addMessage.bind(this)}>
-        <input type="text" ref={ el => this.inputEl = el }/>
-        <input type="submit"/>
-        <ul>
-          { /* Render the list of messages */
-            this.state.messages.map( message => <li key={message.id}>{message.text}</li> )
-          }
-        </ul>
-      </form>
-    );
-  }
+    constructor(props) {
+        super(props);
+        this.state = { list_out_of_stock: [] };
+    }
+
+    /**
+     * Launched at the beginning of the component life
+     * Get all out of stock elements
+     */
+    componentWillMount() {
+        fire.database().ref('stocked').orderByChild("in_stock").equalTo(0).on('child_added', snapshot => {
+            let out = { id: snapshot.key, text: snapshot.val().place };
+            this.setState({ list_out_of_stock: [out].concat(this.state.list_out_of_stock) });
+            //console.log(this.state.list_out_of_stock);
+        })
+    }
+
+    /**
+     * Update stock by the key of an item
+     * Put it in stock changing quantity of in_stock boolean
+     * @param {*} id 
+     */
+    updateStock(id) {
+        let quantity;
+        fire.database().ref('stocked').orderByKey().equalTo(id).on('child_added', snapshot => {
+            quantity = { text: snapshot.val().quantity};
+            fire.database().ref('stocked').child(id).update({
+                '/in_stock': 1,
+                '/quantity': quantity.text + 50
+            })
+        })
+        
+        this.updateState(id);
+        /*list_out_of_stock.indexOf()
+        this.setState({list_out_of_stock: [this.state.list_out_of_stock.splice()]});*/
+    }
+
+    /**
+     * Update state variable, delete current out of stock item
+     * @param {*} id 
+     */
+    updateState(id) {
+        let copy = this.state.list_out_of_stock;
+        copy.forEach(element => {
+            if (element.id === id) {
+                copy.splice(copy.indexOf(element), 1);
+                this.setState({ list_out_of_stock: copy });
+                return;
+            }
+        });
+    }
+
+    render() {
+        return (
+            <div className="App">
+                <Layout>
+                    <Layout.Header>
+                        <h1 className="App-title">HuitNeufDix</h1>
+                    </Layout.Header>
+                    <Layout>
+                        <Layout.Content>
+                            <div className="div-list">
+                                <ul>
+                                    { /* Render the list of messages */
+                                        this.state.list_out_of_stock.map(
+                                            out => <li key={out.id}>{out.text}
+                                                <Button id={out.id} onClick={() => this.updateStock(out.id)}>{out.id}</Button></li>
+                                        )
+                                    }
+                                </ul>
+                            </div>
+                        </Layout.Content>
+                    </Layout>
+                </Layout>
+            </div>
+        );
+    }
 }
 
 export default App;
+
 
 
 
