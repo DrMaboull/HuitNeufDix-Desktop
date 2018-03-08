@@ -5,6 +5,8 @@
   "dependencies": {
     "antd": "^3.2.1",
     "firebase": "^4.10.1",
+    "firebase-admin": "^5.9.1",
+    "firebase-functions": "^0.8.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.1.1"

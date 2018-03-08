@@ -4,8 +4,9 @@ var config = { /* COPY THE ACTUAL CONFIG FROM FIREBASE CONSOLE */
     authDomain: "huitneufdix-123456.firebaseapp.com",
     databaseURL: "https://huitneufdix-123456.firebaseio.com",
     projectId: "huitneufdix-123456",
-    storageBucket: "",
+    storageBucket: "huitneufdix-123456.appspot.com",
     messagingSenderId: "122149889685"
+
 };
 var fire = firebase.initializeApp(config);
 export default fire;
