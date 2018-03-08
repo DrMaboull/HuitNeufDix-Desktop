@@ -19,24 +19,31 @@ firebase = pyrebase.initialize_app(config)
 db = firebase.database()
 
 ORDERS = db.child('orders').get()
-#PRODUCTS = db.child('products')
 
 @app.route('/getJourney/<profil>', methods=['POST', 'GET'])
 def geJourney(profil):
+    weight = 0
+    if (profil == "strong"):
+        weight = 200
+    elif (profil == "skinny"):
+        weight = 50
+    elif (profil == "medium"):
+        weight = 100
+
     req = flask.request.json
     orders = []
     for current in ORDERS.val().items():
         orders.append(current)
 
     # get best order list
-    order_list = defineBestCombinaison(orders, 200)
+    order_list = defineBestCombinaison(orders, weight)
 
     # creation of a journey with order_list
     
-    journey = {"orders": [item[0] for item in order_list], "ordered_orders": defineBestProductsList(order_list)}
+    journey = {"orders": [item[0] for item in order_list], "ordered_products": defineBestProductsList(order_list)}
     db.child('journeys').push(journey)
 
-    return jsonify(204, "")
+    return jsonify(journey)
 
 
 # Define best journey according to the user profile
