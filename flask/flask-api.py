@@ -5,6 +5,8 @@ from flask import jsonify
 from firebase_admin import credentials
 import pyrebase
 import time
+from operator import itemgetter
+from collections import OrderedDict
 
 app = flask.Flask(__name__)
 
@@ -21,7 +23,7 @@ db = firebase.database()
 ORDERS = db.child('orders').get()
 
 @app.route('/getJourney/<profil>', methods=['POST', 'GET'])
-def geJourney(profil):
+def getJourney(profil):
     weight = 0
     if (profil == "strong"):
         weight = 200
@@ -38,13 +40,19 @@ def geJourney(profil):
     # get best order list
     order_list = defineBestCombinaison(orders, weight)
 
-    # creation of a journey with order_list
+    # get ordered products of current orders
+    products_keys = getProducts(order_list)
     
-    journey = {"orders": [item[0] for item in order_list], "ordered_products": defineBestProductsList(order_list)}
+    products_content = []
+    for current in products_keys:
+        products_content.append(dict(db.child('products').child(current).get(0).val()))
+    sorted(products_content, key=itemgetter('place'))
+
+    # create and push journey
+    journey = {"orders": [item[0] for item in order_list], "ordered_products": products_content, "done": 0}
     db.child('journeys').push(journey)
 
     return jsonify(journey)
-
 
 # Define best journey according to the user profile
 def defineBestCombinaison(elements, target, best=[], partial=[]):
@@ -75,7 +83,7 @@ def defineBestCombinaison(elements, target, best=[], partial=[]):
 
 
 # Define best product list from selected orders
-def defineBestProductsList(order_list):
+def getProducts(order_list):
     list = []
     item = ()
     print(order_list)
@@ -85,6 +93,7 @@ def defineBestProductsList(order_list):
                 products = item[1]['products']
                 for product in products:
                     list.append(product)
+
     return list
 
 
