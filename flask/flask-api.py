@@ -1,7 +1,8 @@
 import firebase_admin
 from firebase_admin import db
 import flask
-from flask import jsonify
+from flask import jsonify, request, jsonify
+import socket
 from firebase_admin import credentials
 import pyrebase
 import time
@@ -19,18 +20,22 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 db = firebase.database()
-
 ORDERS = db.child('orders').get()
 
+@app.route('/done/<id>', methods=['POST', 'GET'])
+def done(id):
+    return jsonify(204, "")
+    
 @app.route('/getJourney/<profil>', methods=['POST', 'GET'])
 def getJourney(profil):
+    
     weight = 0
-    if (profil == "strong"):
-        weight = 200
-    elif (profil == "skinny"):
-        weight = 50
-    elif (profil == "medium"):
-        weight = 100
+    if (profil == "Strong"):
+        weight = 2000
+    elif (profil == "Skinny"):
+        weight = 500
+    elif (profil == "Medium"):
+        weight = 1000
 
     req = flask.request.json
     orders = []
@@ -47,11 +52,14 @@ def getJourney(profil):
     for current in products_keys:
         products_content.append(dict(db.child('products').child(current).get(0).val()))
     sorted(products_content, key=itemgetter('place'))
-
+    journeys_tmp = db.child('journeys').get()
+    count_id = 0
+    for i in journeys_tmp.val().items():
+        count_id = count_id + 1
     # create and push journey
-    journey = {"orders": [item[0] for item in order_list], "ordered_products": products_content, "done": 0}
+    journey = {"orders": [item[0] for item in order_list], "ordered_products": products_content, "done": 0, "id" : count_id + 1}
     db.child('journeys').push(journey)
-
+    print (journey)
     return jsonify(journey)
 
 # Define best journey according to the user profile
@@ -86,7 +94,7 @@ def defineBestCombinaison(elements, target, best=[], partial=[]):
 def getProducts(order_list):
     list = []
     item = ()
-    print(order_list)
+    #print(order_list)
     for current in order_list:
         for item in ORDERS.val().items():
             if item[0] == current[0]:
@@ -96,7 +104,13 @@ def getProducts(order_list):
 
     return list
 
+def getIp():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("gmail.com", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
 
 # Start API
 if __name__ == '__main__':
-    app.run(debug = True)
+    app.run(host=getIp(), port=5000, debug = True)
