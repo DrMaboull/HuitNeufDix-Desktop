@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import fire from './fire';
+import Header from './components/Header';
+import SideBar from './components/SideBar';
+import Content from './components/Content';
 import "./App.css";
 
 import { Layout, Button } from 'antd'
@@ -18,7 +21,6 @@ class App extends Component {
         fire.database().ref('stocked').orderByChild("in_stock").equalTo(0).on('child_added', snapshot => {
             let out = { id: snapshot.key, text: snapshot.val().place };
             this.setState({ list_out_of_stock: [out].concat(this.state.list_out_of_stock) });
-            //console.log(this.state.list_out_of_stock);
         })
     }
 
@@ -38,8 +40,6 @@ class App extends Component {
         })
         
         this.updateState(id);
-        /*list_out_of_stock.indexOf()
-        this.setState({list_out_of_stock: [this.state.list_out_of_stock.splice()]});*/
     }
 
     /**
@@ -59,27 +59,32 @@ class App extends Component {
 
     render() {
         return (
-            <div className="App">
-                <Layout>
-                    <Layout.Header>
-                        <h1 className="App-title">HuitNeufDix</h1>
-                    </Layout.Header>
-                    <Layout>
-                        <Layout.Content>
-                            <div className="div-list">
-                                <ul>
-                                    { /* Render the list of messages */
-                                        this.state.list_out_of_stock.map(
-                                            out => <li key={out.id}>{out.text}
-                                                <Button id={out.id} onClick={() => this.updateStock(out.id)}>{out.id}</Button></li>
-                                        )
-                                    }
-                                </ul>
-                            </div>
-                        </Layout.Content>
-                    </Layout>
-                </Layout>
+            <div>
+                <Header />
+                <SideBar />
+                <Content />
             </div>
+            // <div className="App">
+            //     <Layout>
+            //         <Layout.Header>
+            //             <h1 className="App-title">HuitNeufDix</h1>
+            //         </Layout.Header>
+            //         <Layout>
+            //             <Layout.Content>
+            //                 <div className="div-list">
+            //                     <ul>
+            //                         { /* Render the list of messages */
+            //                             this.state.list_out_of_stock.map(
+            //                                 out => <li key={out.id}>{out.text}
+            //                                     <Button id={out.id} onClick={() => this.updateStock(out.id)}>{out.id}</Button></li>
+            //                             )
+            //                         }
+            //                     </ul>
+            //                 </div>
+            //             </Layout.Content>
+            //         </Layout>
+            //     </Layout>
+            // </div>
         );
     }
 }
